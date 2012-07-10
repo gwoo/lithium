@@ -8,7 +8,9 @@ php:
   - 5.3
   - 5.4
 
-before_script: php tests/ci_depends.php $OPCODE_CACHE
+before_script:
+    - php tests/ci_depends.php $OPCODE_CACHE
+    - console/li3 quality syntax --silent --plain
 
 script: console/li3 test --filters=Profiler tests/cases
 

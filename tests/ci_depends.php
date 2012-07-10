@@ -6,20 +6,26 @@
  * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
-
-if (isset($argv[1]) && 'APC' === strtoupper($argv[1])) {
-	PhpExtensions::install('apc');
-} else {
-	PhpExtensions::install('xcache');
-}
-PhpExtensions::install('mongo');
+Setup::library('li3_quality');
+Setup::extension('mongo');
+Setup::extension(isset($argv[1]) && 'APC' === strtoupper($argv[1]) ? 'apc' : 'xcache');
 
 /**
  * Class to install native PHP extensions mainly
  * for preparing test runs.
  */
-class PhpExtensions {
+class Setup {
 
+	/**
+	 * Holds build, configure and install instructions for libraries.
+	 *
+	 * @var array Libraries to build keyed by extension name.
+	 */
+	protected static $_libraries = array(
+		'li3_quality' => array(
+			'url' => 'git://github.com/UnionOfRAD/li3_quality.git'
+		)
+	);
 	/**
 	 * Holds build, configure and install instructions for PHP extensions.
 	 *
@@ -68,6 +74,29 @@ class PhpExtensions {
 	);
 
 	/**
+	 * Install library by given name.
+	 *
+	 * @param string $name The name of the library to install.
+	 * @return void
+	 */
+	public static function library($name) {
+		if (!isset(static::$_libraries[$name])) {
+			return;
+		}
+		$library = static::$_libraries[$name];
+		$bootstrap = dirname(__DIR__) . '/config/bootstrap.php';
+
+		if (!file_exists($bootstrap)) {
+			if (mkdir(dirname($bootstrap), 0755, true)) {
+				file_put_contents($bootstrap, "<?php\nuse lithium\core\Libraries;\n", FILE_APPEND);
+			}
+		}
+		if (static::_system("git clone {$library['url']} libraries/li3_quality") === 0) {
+			file_put_contents($bootstrap, "Libraries::add('{$name}');\n", FILE_APPEND);
+		}
+	}
+
+	/**
 	 * Install extension by given name.
 	 *
 	 * Uses configration retrieved as per `php_ini_loaded_file()`.
@@ -76,7 +105,7 @@ class PhpExtensions {
 	 * @param string $name The name of the extension to install.
 	 * @return void
 	 */
-	public static function install($name) {
+	public static function extension($name) {
 		if (!isset(static::$_extensions[$name])) {
 			return;
 		}
@@ -124,6 +153,7 @@ class PhpExtensions {
 			printf("=> Command '%s' failed !", $command);
 			exit($return);
 		}
+		return $return;
 	}
 }
 
