@@ -713,6 +713,7 @@ class RouteTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $result->params);
 
 		$route = new Route(array(
+			'continue' => true,
 			'template' => '/products/{:action:add|edit|remove}/{:category}',
 			'params' => array('controller' => 'Products')
 		));
