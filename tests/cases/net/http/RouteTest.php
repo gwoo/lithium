@@ -696,6 +696,45 @@ class RouteTest extends \lithium\test\Unit {
 		$nonDefault = array('controller' => 'Admin', 'action' => 'view');
 		$this->assertIdentical('/Admin/view', $route->match($nonDefault));
 	}
+
+	public function testRouteRouteParsingWithRegExAction() {
+		$route = new Route(array(
+			'template' => '/products/{:action:add|edit|remove}/{:category}',
+			'params' => array('controller' => 'Products')
+		));
+		$request = new Request();
+		$request->url = '/products/add/computer';
+		$result = $route->parse($request);
+		$expected = array(
+			'controller' => 'Products',
+			'action' => 'add',
+			'category' => 'computer'
+		);
+		$this->assertEqual($expected, $result->params);
+
+		$route = new Route(array(
+			'template' => '/products/{:action:add|edit|remove}/{:category}',
+			'params' => array('controller' => 'Products')
+		));
+		$request = new Request();
+		$request->url = '/products/add';
+		$result = $route->parse($request);
+		$this->assertEqual(false, $result);
+
+		$route = new Route(array(
+			'template' => '/products/{:action:add|edit|remove}/{:category}',
+			'params' => array('controller' => 'Products', 'action' => 'index')
+		));
+		$request = new Request();
+		$request->url = '/products/add';
+		$result = $route->parse($request);
+		$expected = array(
+			'controller' => 'Products',
+			'action' => 'index',
+			'category' => 'add'
+		);
+		$this->assertEqual($expected, $result->params);
+	}
 }
 
 ?>

@@ -158,6 +158,13 @@ class Route extends \lithium\core\Object {
 	protected $_formatters = array();
 
 	/**
+	 * Boolean indicate if `'action'` has been defined in construct parameters.
+	 *
+	 * @var string
+	 */
+	protected $_action = false;
+
+	/**
 	 * Auto configuration properties. Also used as the list of properties to return when exporting
 	 * this `Route` object to an array.
 	 *
@@ -191,6 +198,7 @@ class Route extends \lithium\core\Object {
 		parent::_init();
 
 		if (!$this->_config['continue']) {
+			$this->_action = isset($this->_params['action']);
 			$this->_params += array('action' => 'index');
 		}
 		if (!$this->_config['pattern']) {
@@ -459,11 +467,15 @@ class Route extends \lithium\core\Object {
 	protected function _regex($regex, $param, $token, $prefix) {
 		if ($regex) {
 			$this->_subPatterns[$param] = $regex;
+			if (!$this->_action && $param == 'action') {
+				unset($this->_params[$param]);
+			}
 		} elseif ($param == 'args') {
 			$regex = '.*';
 		} else {
 			$regex = '[^\/]+';
 		}
+
 		$req = $param === 'args' || array_key_exists($param, $this->_params) ? '?' : '';
 
 		if ($prefix === '/') {
